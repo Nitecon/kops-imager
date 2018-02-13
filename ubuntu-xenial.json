@@ -1,0 +1,65 @@
+{
+    "variables": {
+      "vpc": "{{env `VPC_ID`}}",
+      "subnet": "{{env `SUBNET_ID`}}",
+      "distro": "Ubuntu",
+      "img_release": "ubuntu",
+      "ami_name": "k8s-1.8-ubuntu-xenial-amd64-hvm-ebs-{{isotime \"2006-01-02\"}}",
+      "img_name": "ubuntu-xenial-amd64-hvm-*",
+      "aws_region": "{{env `AWS_REGION`}}",
+      "pub_ip": "false"
+    },
+    "builders": [{
+    "associate_public_ip_address": "false",
+      "vpc_id": "{{user `vpc`}}",
+      "subnet_id": "{{user `subnet`}}",
+      "name": "Kops Base Image Builder - AWS",
+      "type": "amazon-ebs",
+      "ami_virtualization_type": "hvm",
+      "force_deregister": "true",
+      "force_delete_snapshot": "true",
+      "shutdown_behavior": "terminate",
+      "region": "{{user `aws_region`}}",
+      "spot_price_auto_product": "Linux/UNIX (Amazon VPC)",
+      "ssh_private_ip": true,
+      "source_ami" : "ami-0b383171",
+      "instance_type": "t2.medium",
+      "ssh_username": "ubuntu",
+      "ami_name": "{{user `ami_name`}}",
+      "tags": {
+        "Name": "{{user `ami_name`}}"
+      },
+      "run_tags": { 
+        "Name": "{{user `ami_name`}}"
+      },
+      "run_volume_tags": {
+        "Name": "{{user `ami_name`}}"
+      },
+      "snapshot_tags": {
+        "Name": "{{user `ami_name`}}"
+      },
+      "ami_description": "Kubernetes 1.8 Base Image - {{user `distro`}} {{user `img_release`}} amd64"
+    }],
+    "provisioners": [
+      {
+          "type": "shell",
+          "inline": [
+              "sudo apt-get update -y && sudo apt-get install -y ansible"
+          ]
+      }, 
+      {
+          "type": "ansible-local",
+          "playbook_file": "ansible/playbook.yaml",
+          "role_paths": [
+              "ansible/roles/common"
+          ],
+          "playbook_dir": "ansible"
+      },
+      {
+        "type": "shell",
+        "inline": [
+          "rm .ssh/authorized_keys ; sudo rm /root/.ssh/authorized_keys"
+        ]
+      }
+    ]
+  }

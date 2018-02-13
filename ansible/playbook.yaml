@@ -1,0 +1,7 @@
+---
+  - hosts: localhost
+    connection: local
+    gather_facts: true    # gather OS info that is made available for tasks/roles
+    become: yes           
+    roles:
+      - common
